@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  fastapi-capmonster:
+    container_name: ${DOCKER_IMAGE_NAME?Variable not set}
+    image: '${DOCKER_IMAGE_NAME?Variable not set}:${TAG-latest}'
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      labels:
+        - fastapi-capmonster
+    volumes:
+        - .:/app
+    ports:
+      - 5000:5000
