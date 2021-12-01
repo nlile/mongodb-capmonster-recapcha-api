@@ -4,7 +4,7 @@ Set up a [Traefik network](https://github.com/lfache/awesome-traefik/tree/master
 
 `git clone {repository}` or move files via deployment/sftp/etc.
 
-Rename/mover the directory. Such as
+Rename/move the directory. Such as
 
 `sudo cp -rlf /var/sftp/uploads/api.example.com/. ~/api.example.com`
 

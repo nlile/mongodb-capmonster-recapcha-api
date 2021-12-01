@@ -44,7 +44,6 @@ class Settings(BaseSettings):
     # Number of minutes before captcha database entries are removed
     GARBAGE_TIMER = int(os.getenv("GARBAGE_TIMER", 60))
 
-
     class Config:
         case_sensitive = True
 

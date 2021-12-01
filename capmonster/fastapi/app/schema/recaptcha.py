@@ -12,9 +12,12 @@ class CaptchaBase(ConfigModel):
     proxytype: Optional[ProxyTypeEnum]
 
     @validator("proxy", pre=True, always=True)
-    def incorrect_proxy_format(cls, v: str) -> str:
-        """ Strips http:// from the proxy string if present. Robust implementation would update proxytype if mismatched
+    def incorrect_proxy_format(cls, v: str):
         """
+        Strips http:// from the proxy string if present. Robust implementation would update proxytype if mismatched
+        """
+        if not v:
+            return None
         if "://" in v:
             return v.split('://')[1]
         return v

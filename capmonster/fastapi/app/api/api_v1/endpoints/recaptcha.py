@@ -15,35 +15,46 @@ from fastapi.responses import PlainTextResponse
 from app.schema.recaptcha import ReCaptchaResponse, ReCaptchaInDb, ReCaptchaCreate, ReCaptchaSolved, \
     ReCaptchaResponse2Captcha
 
-""" Error codes hard-coded from: https://2captcha.com/2captcha-api#error_handling
+""" 
+Error codes hard-coded from: https://2captcha.com/2captcha-api#error_handling
 """
 
 router = APIRouter()
 
 
 @router.get("/", response_model=str)
-async def operation_status(
+async def database_status(
         db: AsyncIOMotorClient = Depends(get_database), ) -> Any:
+    """
+    Checks if the database is online and returns the server version.
+    """
     try:
-        return f"Server Response: {db.server_info()}"
+        server_info = await db.server_info()
+        return f"Database Version: {server_info['version']}"
     except ServerSelectionTimeoutError as sste:
         return f"MongoDB Error: {sste}"
     except ConnectionFailure as cf:
         return f"MongoDB Server Unavailable: {cf}"
     except Exception as e:
-        return f"Unknown Exception: {e}"
+        return f"Unknown MongoDB Exception: {e}"
 
 
 @router.get("/garbage", response_model=int)
-async def remove_garbage(
-        db: AsyncIOMotorClient = Depends(get_database), ):
+async def garbage_collection(
+        db: AsyncIOMotorClient = Depends(get_database), ) -> int:
+    """
+    Purges expired documents from the database based on settings GARBAGE_TIMER.
+    """
     return await purge_garbage(db)
 
 
 @router.post("/submit", response_model=ReCaptchaInDb,
              response_model_exclude_unset=True, response_model_exclude_none=True)
-async def post_captcha(recaptcha: ReCaptchaCreate,
-                 db: AsyncIOMotorClient = Depends(get_database), ):
+async def submit_recaptcha(recaptcha: ReCaptchaCreate,
+                           db: AsyncIOMotorClient = Depends(get_database), ):
+    """
+    Create new ReCaptcha job.
+    """
     if recaptcha.api_key != settings.ROOT_API_KEY:
         raise HTTPException(
             status_code=401,
@@ -54,8 +65,11 @@ async def post_captcha(recaptcha: ReCaptchaCreate,
 
 @router.get("/{job_id}", response_model=Union[ReCaptchaResponse, ReCaptchaSolved],
             response_model_exclude_unset=True, response_model_exclude_none=True)
-async def get_job_id(job_id: PyObjectId,
-                     db: AsyncIOMotorClient = Depends(get_database), ):
+async def get_recaptcha_job(job_id: PyObjectId,
+                            db: AsyncIOMotorClient = Depends(get_database), ):
+    """
+    Retrieve ReCaptcha job by job_id.
+    """
     job = await get_recaptcha(db, ObjectId(job_id))
     if not job:
         raise HTTPException(
@@ -66,14 +80,17 @@ async def get_job_id(job_id: PyObjectId,
 
 
 @router.post("/2captcha/submit", response_class=PlainTextResponse)
-async def post_as_2captcha(key: str,
-                           googlekey: str,
-                           pageurl: str,
-                           method: str = "userrecaptcha",
-                           proxy: Optional[str] = None,
-                           proxytype: Optional[str] = None,
-                           json: int = 0,
-                           db: AsyncIOMotorClient = Depends(get_database), ):
+async def submit_recaptcha_2captcha(key: str,
+                                    googlekey: str,
+                                    pageurl: str,
+                                    method: str = "userrecaptcha",
+                                    proxy: Optional[str] = None,
+                                    proxytype: Optional[str] = None,
+                                    json: int = 0,
+                                    db: AsyncIOMotorClient = Depends(get_database), ):
+    """
+    Mimic 2Captcha API endpoint parameters to create a new ReCaptcha job.
+    """
     if key != settings.ROOT_API_KEY:
         return PlainTextResponse("ERROR_WRONG_USER_KEY", status_code=401)
     try:
@@ -83,16 +100,19 @@ async def post_as_2captcha(key: str,
         if json == 0:
             return f"OK|{result.id}"
         return {"status": 1, "request": f"{result.id}"}
-    except ValidationError:
+    except ValidationError as ve:
         return PlainTextResponse("ERROR_BAD_PARAMETERS", status_code=422)
     except Exception as e:
         return PlainTextResponse(f"UNKNOWN_ERROR: {e}", status_code=422)
 
 
 @router.get("/2captcha/{job_id}", response_class=PlainTextResponse)
-async def get_job_id(job_id: PyObjectId,
-                     db: AsyncIOMotorClient = Depends(get_database), ):
+async def get_recaptcha_job_2captcha(job_id: PyObjectId,
+                                     db: AsyncIOMotorClient = Depends(get_database), ):
     job = await get_recaptcha(db, ObjectId(job_id))
+    """
+    Mimic 2Captcha API endpoint parameters to retrieve a ReCaptcha job by job_id.
+    """
 
     # The job_id does not exist in the database, return ERROR_WRONG_CAPTCHA_ID
     if not job:

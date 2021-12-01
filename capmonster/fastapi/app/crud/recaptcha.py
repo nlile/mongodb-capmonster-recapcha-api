@@ -16,16 +16,15 @@ from app.core.config import settings
 
 
 async def total_docs_in_db(conn: AsyncIOMotorClient) -> int:
-    """Get total documents in the database
-    :param conn: AsyncIOMotorClient connection
-    :return: INT count of the total docs in mongodb or 0 if none
+    """
+    Counts and returns the number of total documents in the database
     """
     return await conn[settings.MDB_DATABASE][settings.MDB_COLLECTION].count_documents({})
 
 
 async def get_one_recaptcha(conn: AsyncIOMotorClient) -> ReCaptchaResponse:
     """
-
+    Test function for retrieving a single entry from the collection
     """
     one = await conn[settings.MDB_DATABASE][settings.MDB_COLLECTION].find_one({})
     return ReCaptchaResponse(**one)
@@ -33,7 +32,7 @@ async def get_one_recaptcha(conn: AsyncIOMotorClient) -> ReCaptchaResponse:
 
 async def get_all_recaptcha(conn: AsyncIOMotorClient) -> List[ReCaptchaResponse]:
     """
-
+    Returns all documents in the recaptcha collection
     """
     rsp = []
     print(settings.MDB_URI)
@@ -45,8 +44,8 @@ async def get_all_recaptcha(conn: AsyncIOMotorClient) -> List[ReCaptchaResponse]
 
 
 async def create_recaptcha(conn: AsyncIOMotorClient, recaptcha: ReCaptchaCreate) -> ReCaptchaInDb:
-    """ Add recaptcha job to the DB
-
+    """
+    Adds a recaptcha job to the database
     """
     # Add DateTime
     recaptcha = ReCaptchaInCreate(**recaptcha.dict())
@@ -58,7 +57,8 @@ async def create_recaptcha(conn: AsyncIOMotorClient, recaptcha: ReCaptchaCreate)
 
 
 async def get_recaptcha(conn: AsyncIOMotorClient, job_id: ObjectId) -> Union[ReCaptchaResponse, ReCaptchaSolved, None]:
-    """ Retrieve a captcha job from the DB
+    """
+    Retrieve a captcha job from the DB using job_id
     """
     result = await conn[settings.MDB_DATABASE][settings.MDB_COLLECTION].find_one({"_id": job_id})
     if not result:
@@ -69,12 +69,14 @@ async def get_recaptcha(conn: AsyncIOMotorClient, job_id: ObjectId) -> Union[ReC
 
 
 async def purge_garbage(conn: AsyncIOMotorClient) -> int:
-    all = conn[settings.MDB_DATABASE][settings.MDB_COLLECTION].find({})
+    """
+    Purges documents older than GARBAGE_TIMER
+    """
+    all_docs = conn[settings.MDB_DATABASE][settings.MDB_COLLECTION].find({})
     updates = []
-    async for document in all:
+    async for document in all_docs:
         if "created_on" in document.keys():
             created_on = document['created_on']
-
             if isinstance(document['created_on'], str):
                 created_on = datetime.datetime.fromisoformat(document['created_on'].replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
             elif isinstance(document['created_on'], datetime.datetime):
@@ -85,7 +87,7 @@ async def purge_garbage(conn: AsyncIOMotorClient) -> int:
                 updates.append(DeleteOne({'_id': document["_id"]}))
 
     if updates:
-        # await conn.bulk_write(updates)
+        await conn.bulk_write(updates)
         print(f"Garbage collection purged {len(updates)} documents from the database")
         return len(updates)
     return 0

@@ -32,7 +32,7 @@ logger.setLevel(logging.INFO)
 
 async def purge_garbage(collection: AsyncIOMotorCollection):
     """
-    Purges DB documents older than GARBAGE_TIMER
+    Purges documents older than GARBAGE_TIMER
     Can implement here or via cron/scheduled FastAPI endpoints
     """
     updates = []
