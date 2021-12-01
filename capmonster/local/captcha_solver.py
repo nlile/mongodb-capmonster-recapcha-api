@@ -204,7 +204,7 @@ class CaptchaUpload:
                             logger.error(f"{rce.message}\t{rce.text}")
                             if any(rce.text == critical_error for critical_error in CRITICAL_ERRORS):
                                 recapcha_error = ReCaptchaErrorResponse(finished_on=datetime.now(),
-                                                                   error=rce.message,
+                                                                   error=rce.text,
                                                                    **recapcha_upload.dict(exclude_none=True,
                                                                                           exclude={"cap_id"}))
                                 await self.collection.update_one({"_id": ObjectId(_id)},
