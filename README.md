@@ -1,8 +1,12 @@
 # Self-Hosted CapMonster Cloud API
-Send requests to a single [CapMonster](https://bit.ly/CapMonster2) instance from scripts/programs that do not belong to the same LAN.
+Send requests to a single [CapMonster](https://bit.ly/CapMonster2) instance from scripts/programs 
+on workstations/servers that do not belong to the same LAN.
+
+_Please be aware that the CapMonster TOS states you "may only use the software for personal purposes."_
 
 ### capmonster/local/*
-Runs alongside a single license of [ZennoLab's CapMonster 2](https://bit.ly/CapMonster2).
+`Server.py` runs alongside a single license of [ZennoLab's CapMonster 2](https://bit.ly/CapMonster2). If `client.py`
+is granted DB rw privileges, fastapi is not necessary.
 
 ### capmonster/fastapi/app/*
 Send ReCaptcha jobs to FastAPI endpoints from anywhere without granting DB rw access.

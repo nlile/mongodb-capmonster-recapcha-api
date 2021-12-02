@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     MDB_URI = os.getenv("MDB_URI")
     MDB_DATABASE = os.getenv("MDB_DATABASE")
     MDB_COLLECTION = os.getenv("MDB_COLLECTION")
+    MDB_COLLECTION_USERS = os.getenv("MDB_COLLECTION_USERS", "users")
+    MDB_COLLECTION_KEYS = os.getenv("MDB_COLLECTION_KEYS", "keys")
 
     MAX_CONNECTIONS_COUNT = int(os.getenv("MAX_CONNECTIONS_COUNT", 10))
     MIN_CONNECTIONS_COUNT = int(os.getenv("MIN_CONNECTIONS_COUNT", 10))
@@ -27,11 +29,11 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS = CommaSeparatedStrings(os.getenv("ALLOWED_HOSTS", ""))
 
     SECRET_KEY: str = os.getenv("SECRET_KEY")
-    # FASTAPI_USERS_SECRET_KEY: str = os.getenv("FASTAPI_USERS_SECRET_KEY", SECRET_KEY)
-    # ALGORITHM = "HS256"
-    # ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
-
+    FASTAPI_USERS_SECRET_KEY: str = os.getenv("FASTAPI_USERS_SECRET_KEY")
+    ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 180))
     ROOT_API_KEY = os.getenv("ROOT_API_KEY", "XXXXXXX")
+
     # Number of server.py solver workers to spawn
     SERVER_WORKERS = int(os.getenv("SERVER_WORKERS", 3))
 

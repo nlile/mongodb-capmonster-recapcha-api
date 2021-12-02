@@ -43,6 +43,17 @@ class ConfigModel(BaseModel):
 
 class DateTimeModelMixin(BaseModel):
     created_on: Optional[datetime]
+    updated_on: Optional[datetime]
+
+    @validator("created_on", "updated_on", pre=True, always=True)
+    def default_datetime(cls, v: datetime) -> datetime:
+        if not isinstance(v, datetime):
+            return datetime.now()
+        return v
+
+
+class DateTimeModelMixinTask(BaseModel):
+    created_on: Optional[datetime]
     finished_on: Optional[datetime]
 
     @validator("created_on", pre=True, always=True)

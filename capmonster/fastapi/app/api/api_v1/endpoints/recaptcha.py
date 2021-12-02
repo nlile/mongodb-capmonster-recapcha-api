@@ -7,6 +7,7 @@ from fastapi.responses import PlainTextResponse
 
 from app.core.config import settings
 from app.core.utils import create_aliased_response
+from app.crud.api_key import get_api_key, subtract_credit
 from app.crud.recaptcha import get_one_recaptcha, get_all_recaptcha, create_recaptcha, get_recaptcha, purge_garbage
 from app.db.mongodb import AsyncIOMotorClient, get_database
 from app.schema.common import PyObjectId
@@ -53,12 +54,20 @@ async def submit_recaptcha(recaptcha: ReCaptchaCreate,
     """
     Create new ReCaptcha job.
     """
-    if recaptcha.api_key != settings.ROOT_API_KEY:
+    validate_key = await get_api_key(db, apikey=recaptcha.api_key)
+    if validate_key:
+        if validate_key.credits < 1:
+            return PlainTextResponse("ERROR_ZERO_BALANCE", status_code=401)
+
+    if not validate_key and recaptcha.api_key != settings.ROOT_API_KEY:
         raise HTTPException(
             status_code=401,
             detail=f"API Key not authorized",
         )
-    return await create_recaptcha(db, recaptcha)
+    result = await create_recaptcha(db, recaptcha)
+    if result and validate_key:
+        subtracted = await subtract_credit(db, apikey=validate_key.key)
+    return result
 
 
 @router.get("/2captcha", response_class=PlainTextResponse)
@@ -119,12 +128,18 @@ async def submit_recaptcha_2captcha(key: str,
     """
     Mimic 2Captcha API endpoint parameters to create a new ReCaptcha job.
     """
-    if key != settings.ROOT_API_KEY:
+    validate_key = await get_api_key(db, apikey=key)
+    if validate_key:
+        if validate_key.credits < 1:
+            return PlainTextResponse("ERROR_ZERO_BALANCE", status_code=401)
+    if not validate_key and key != settings.ROOT_API_KEY:
         return PlainTextResponse("ERROR_WRONG_USER_KEY", status_code=401)
     try:
         recaptcha = ReCaptchaCreate(api_key=key, method=method, googlekey=googlekey, pageurl=pageurl, proxy=proxy,
                                     proxytype=proxytype)
         result = await create_recaptcha(db, recaptcha)
+        if result and validate_key:
+            subtracted = await subtract_credit(db, apikey=validate_key.key)
         if json == 0:
             return f"OK|{result.id}"
         return {"status": 1, "request": f"{result.id}"}

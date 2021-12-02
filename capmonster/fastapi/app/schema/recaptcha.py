@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, validator, Field, Extra, HttpUrl
 
-from ..schema.common import ConfigModel, DateTimeModelMixin, DBModelMixin, ProxyTypeEnum
+from ..schema.common import ConfigModel, DateTimeModelMixinTask, DBModelMixin, ProxyTypeEnum
 
 
 class CaptchaBase(ConfigModel):
@@ -44,8 +44,8 @@ class ReCaptchaCreate(ReCaptcha):
         }
 
 
-class ReCaptchaInCreate(ReCaptchaCreate, DateTimeModelMixin):
-    # Adds DateTimeModelMixin field created_on
+class ReCaptchaInCreate(ReCaptchaCreate, DateTimeModelMixinTask):
+    # Adds DateTimeModelMixinTask field created_on
     pass
 
 
@@ -54,7 +54,7 @@ class ReCaptchaInDb(ReCaptcha, DBModelMixin):
     pass
 
 
-class ReCaptchaResponse(ReCaptcha, DateTimeModelMixin):
+class ReCaptchaResponse(ReCaptcha, DateTimeModelMixinTask):
     action: str = "get"
     captcha_id: Optional[int]
     status: Optional[str]
