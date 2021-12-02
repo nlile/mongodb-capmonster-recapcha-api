@@ -3,7 +3,8 @@ Send requests to a single [CapMonster](https://bit.ly/CapMonster2) instance from
 on workstations/servers that do not belong to the same LAN.
 
 ZennoLab's CapMonster is a Windows software package for recognizing captchas and is a self-hosted alternative to
-CapMonster.cloud. CapMonster2 automatically intercepts captchas from local programs and can be configured to receive 
+CapMonster.cloud. Depending on your volume, CapMonster (Windows) is even more cost-effective than CapMonster.cloud. 
+CapMonster2 automatically intercepts captchas from local programs and can be configured to receive 
 requests from a local network. This repo is a basic middleware that lets your CapMonster instance receive and solve 
 ReCaptchas from anywhere.
 
@@ -36,7 +37,7 @@ In other words, clients make requests to a custom domain/FastAPI endpoints versu
 
 ### Setup & Installation
 **/local**
-- Running instance of CapMonster with Recaptcha2 Sitekey Addon (paid license)
+- Running instance of CapMonster with Recaptcha2 Sitekey Addon
 - Clone the full repo (Depends on schema from `capmonster/fastapi/app/schema`)
 - Install requirements `pip install -r requirements.txt`
 - `mv .env.example .env` and update settings
