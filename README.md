@@ -1,8 +1,8 @@
 # Self-Hosted CapMonster Cloud API
-Send requests to a single CapMonster instance from scripts/programs that do not belong to the same LAN.
+Send requests to a single [CapMonster](https://bit.ly/CapMonster2) instance from scripts/programs that do not belong to the same LAN.
 
 ### capmonster/local/*
-Runs alongside a single license of ZennoLab's CapMonster 2. 
+Runs alongside a single license of [ZennoLab's CapMonster 2](https://bit.ly/CapMonster2).
 
 ### capmonster/fastapi/app/*
 Send ReCaptcha jobs to FastAPI endpoints from anywhere without granting DB rw access.
@@ -12,10 +12,10 @@ Optional feature. Allows clients to make requests to a custom domain/FastAPI end
 Includes endpoints that mimic 2Captcha's API as well as verbose pydantic (JSON) response models.
 
 ## Setup & Requirements:
-- Create a "Free & Hobby Cluster" with [MongoDB Atlas](https://cloud.mongodb.com/) (free)
+- Create a "Free & Hobby Cluster" with [MongoDB Atlas](https://bit.ly/MongoDBCloud) (free)
 
 **/fastapi**
-- Install docker & docker-compose on a server, such as [DigitalOcean's Basic Droplet](https://www.digitalocean.com/products/droplets/).
+- Install docker & docker-compose on a server, such as [DigitalOcean's Basic Droplet](https://bit.ly/BasicDroplet).
 - Copy the repo & follow instructions in `/fastapi/README.md`
 
 **/local**
@@ -23,7 +23,7 @@ Includes endpoints that mimic 2Captcha's API as well as verbose pydantic (JSON) 
 - Clone the full repo (Depends on schema from `capmonster/fastapi/app/schema`)
 - Install requirements `pip install -r requirements.txt`
 - `mv .env.example .env` and update settings
-- `python ./server.py`
+- `python3 ./server.py`
 
 `server.py` must be running on the same PC as CapMonster. It listens for new jobs, submits them to CapMonster via `captcha_solver.py`, and updates the DB with results. `captcha_solver.py` uses the 2CaptchaAPI to communicate with CapMonster. 
 
@@ -31,11 +31,12 @@ Includes endpoints that mimic 2Captcha's API as well as verbose pydantic (JSON) 
 
 ## Purging garbage
 
-
+Purge garbage in the DB after any minute interval using the `remove_garbage` flag locally in `server` or with FastAPI calls.
 
 ## References
 
 - [ZennoLab CapMonster Wiki](https://zennolab.com/wiki/en:addons:capmonster:work-with-other)
+- [Buy CapMonster 2](https://bit.ly/CapMonster2)
 - [2Captcha API](https://2captcha.com/2captcha-api)
 
 ## TODO
