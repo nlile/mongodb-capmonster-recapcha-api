@@ -156,7 +156,8 @@ class CaptchaUpload:
                 raise ReCaptchaError(f'[CapMonster] Unexpected error response type: {request.text}.',
                                      text=request.text)
 
-    async def solve_recaptcha(self, recapcha: Union[ReCaptchaCreate, ReCaptchaInDb]) -> Union[ReCaptchaSolved, ReCaptchaErrorResponse]:
+    async def solve_recaptcha(self, recapcha: Union[ReCaptchaCreate, ReCaptchaInDb]) -> Union[
+        ReCaptchaSolved, ReCaptchaErrorResponse]:
         """
         The function to handle, upload, solve, and update a recaptcha
         :param recapcha: Pydantic instance of either ReCaptchaCreate or ReCaptchaInDb.
@@ -204,9 +205,9 @@ class CaptchaUpload:
                             logger.error(f"{rce.message}\t{rce.text}")
                             if any(rce.text == critical_error for critical_error in CRITICAL_ERRORS):
                                 recapcha_error = ReCaptchaErrorResponse(finished_on=datetime.now(),
-                                                                   error=rce.text,
-                                                                   **recapcha_upload.dict(exclude_none=True,
-                                                                                          exclude={"cap_id"}))
+                                                                        error=rce.text,
+                                                                        **recapcha_upload.dict(exclude_none=True,
+                                                                                               exclude={"cap_id"}))
                                 await self.collection.update_one({"_id": ObjectId(_id)},
                                                                  {"$set": recapcha_error.dict(exclude_none=True,
                                                                                               exclude={"cap_id"})})
