@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     MIN_CONNECTIONS_COUNT = int(os.getenv("MIN_CONNECTIONS_COUNT", 10))
     # PAGINATION_LIMIT: int = int(os.getenv("PAGINATION_LIMIT"), 10)
 
-    REGISTRATION_ENABLED = bool(os.getenv("REGISTRATION_ENABLED", False))
+    REGISTRATION_ENABLED: bool = strtobool(os.getenv("REGISTRATION_ENABLED", False))
 
     ALLOWED_HOSTS = CommaSeparatedStrings(os.getenv("ALLOWED_HOSTS", ""))
 

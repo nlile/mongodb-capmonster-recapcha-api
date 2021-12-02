@@ -34,7 +34,7 @@ router.include_router(fastapi_users.get_users_router(), prefix="/users",
                       tags=["users"])
 
 
-@router.get("/users/generate-apikey", response_model=APIKeyCaptchaInResponse)
+@router.get("/users/generate-apikey", response_model=APIKeyCaptchaInResponse, tags=["key"])
 async def generate_apikey_route(db: AsyncIOMotorClient = Depends(get_database),
                                 user: UserDB = Depends(current_active_user)):
     if not user.is_verified:

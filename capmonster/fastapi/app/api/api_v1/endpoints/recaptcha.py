@@ -18,7 +18,7 @@ from app.schema.recaptcha import ReCaptchaResponse, ReCaptchaInDb, ReCaptchaCrea
 Error codes hard-coded from: https://2captcha.com/2captcha-api#error_handling
 """
 
-router = APIRouter()
+router = APIRouter(tags=["recaptcha"],)
 
 
 @router.get("/", response_model=str)

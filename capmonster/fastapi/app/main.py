@@ -7,8 +7,10 @@ from app.core.config import settings
 from app.api.api_v1.api import router as endpoint_router
 from app.db.mongodb import close, connect
 
+app = FastAPI(title=settings.PROJECT_NAME,
+              description=settings.APP_DESCRIPTION,
+              version=settings.PROJECT_VERSION)
 
-app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.include_router(endpoint_router, prefix=settings.API_V1_STR)
@@ -36,4 +38,3 @@ async def home():
     The home page
     """
     return PlainTextResponse('{"online": True}', status_code=200)
-
