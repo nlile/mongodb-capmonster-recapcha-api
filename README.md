@@ -3,9 +3,12 @@ Send requests to a single [CapMonster](https://bit.ly/CapMonster2) instance from
 on workstations/servers that do not belong to the same LAN.
 
 ZennoLab's CapMonster is a Windows software package for recognizing captchas and is a self-hosted alternative to
-CapMonster.cloud
+CapMonster.cloud. CapMonster2 automatically intercepts captchas from local programs and can be configured to receive 
+requests from a local network. This repo is a basic middleware that lets your CapMonster instance receive and solve 
+ReCaptchas from anywhere.
 
-_Please be aware that the CapMonster TOS states you "may only use the software for personal purposes."_
+_Please be aware that the CapMonster TOS states you "may only use the software for personal purposes." 
+This middleware should not be used for paid recognition services._
 
 ## Project Structure
 
