@@ -1,12 +1,12 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, BaseConfig, validator, Field, Extra, HttpUrl
+from pydantic import BaseModel, validator, Field, Extra, HttpUrl
 
 from ..schema.common import ConfigModel, DateTimeModelMixin, DBModelMixin, ProxyTypeEnum
 
 
 class CaptchaBase(ConfigModel):
-    # api_key: str = Field(..., alias="key")
+    # Base configuration
     pageurl: HttpUrl
     proxy: Optional[str]
     proxytype: Optional[ProxyTypeEnum]
@@ -24,6 +24,7 @@ class CaptchaBase(ConfigModel):
 
 
 class ReCaptcha(CaptchaBase):
+    # Base ReCaptcha model
     method: str = "userrecaptcha"
     googlekey: str
 
@@ -44,7 +45,7 @@ class ReCaptchaCreate(ReCaptcha):
 
 
 class ReCaptchaInCreate(ReCaptchaCreate, DateTimeModelMixin):
-    # Adds created_on
+    # Adds DateTimeModelMixin field created_on
     pass
 
 
@@ -67,6 +68,7 @@ class ReCaptchaErrorResponse(ReCaptchaResponse, extra=Extra.allow):
 
 
 class ReCaptchaSolved(ReCaptchaResponse, extra=Extra.allow):
+    # A solved ReCaptcha
     solution: str
     finished_on = datetime.now()
     in_queue = False
