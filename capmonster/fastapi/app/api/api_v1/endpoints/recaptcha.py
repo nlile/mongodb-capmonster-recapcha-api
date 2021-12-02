@@ -135,6 +135,7 @@ async def submit_recaptcha_2captcha(key: str,
     if not validate_key and key != settings.ROOT_API_KEY:
         return PlainTextResponse("ERROR_WRONG_USER_KEY", status_code=401)
     try:
+        proxytype = proxytype.upper() if proxytype else None
         recaptcha = ReCaptchaCreate(api_key=key, method=method, googlekey=googlekey, pageurl=pageurl, proxy=proxy,
                                     proxytype=proxytype)
         result = await create_recaptcha(db, recaptcha)
