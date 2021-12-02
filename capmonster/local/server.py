@@ -9,11 +9,14 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from pymongo import UpdateOne, DeleteOne
 from pymongo.errors import ServerSelectionTimeoutError
 from dotenv import load_dotenv, find_dotenv
-
+import sys
+from pathlib import Path
+# Grab and append root path for imports
+fastpath = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(fastpath))
 from captcha_solver import CaptchaUpload, ReCaptchaError
 from mdb import MongoDB
 from capmonster.fastapi.app.schema.recaptcha import ReCaptchaInDb
-
 
 """
     Infinite async producer/consumer loop that runs on the Windows computer with CapMonster
@@ -126,7 +129,8 @@ async def captcha_worker(queue: asyncio.Queue, worker_id: int):
                     possible_error_msg = "TimeoutError"
                     continue
                 except ReCaptchaError as rce:
-                    possible_error_msg = rce.text
+                    if rce.text:
+                        possible_error_msg = rce.text
                     if "ERROR_RECAPTCHA_TIMEOUT" in rce.text:
                         await asyncio.sleep(random.randint(5, 10))
                         continue
@@ -143,7 +147,11 @@ async def captcha_worker(queue: asyncio.Queue, worker_id: int):
             if not success_flag:
                 try:
                     u = await collection.update_one({"_id": ObjectId(captcha_request.id)},
-                                                    {"$set": {"error": str(possible_error_msg)}})
+                                                    {"$set":
+                                                         {"error": str(possible_error_msg),
+                                                          "in_queue": False,
+                                                          "finished_on": datetime.datetime.now(tz=timezone.utc)}
+                                                     })
                 except Exception as e:
                     logger.error(f"MongoDB Exception thrown updating error message: {e}")
                     raise e
