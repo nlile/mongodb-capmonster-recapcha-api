@@ -1,17 +1,15 @@
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Any, List, Union, Optional
-
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Any, Union, Optional
 from pydantic import ValidationError
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
-from starlette.responses import JSONResponse
+from fastapi.responses import PlainTextResponse
 
 from app.core.config import settings
 from app.core.utils import create_aliased_response
 from app.crud.recaptcha import get_one_recaptcha, get_all_recaptcha, create_recaptcha, get_recaptcha, purge_garbage
 from app.db.mongodb import AsyncIOMotorClient, get_database
 from app.schema.common import PyObjectId
-from fastapi.responses import PlainTextResponse
 from app.schema.recaptcha import ReCaptchaResponse, ReCaptchaInDb, ReCaptchaCreate, ReCaptchaSolved, \
     ReCaptchaResponse2Captcha
 
@@ -63,57 +61,18 @@ async def submit_recaptcha(recaptcha: ReCaptchaCreate,
     return await create_recaptcha(db, recaptcha)
 
 
-@router.get("/{job_id}", response_model=Union[ReCaptchaResponse, ReCaptchaSolved],
-            response_model_exclude_unset=True, response_model_exclude_none=True)
-async def get_recaptcha_job(job_id: PyObjectId,
-                            db: AsyncIOMotorClient = Depends(get_database), ):
-    """
-    Retrieve ReCaptcha job by job_id.
-    """
-    job = await get_recaptcha(db, ObjectId(job_id))
-    if not job:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Job with id '{job_id}' not found",
-        )
-    return create_aliased_response(job)
-
-
-@router.post("/2captcha/submit", response_class=PlainTextResponse)
-async def submit_recaptcha_2captcha(key: str,
-                                    googlekey: str,
-                                    pageurl: str,
-                                    method: str = "userrecaptcha",
-                                    proxy: Optional[str] = None,
-                                    proxytype: Optional[str] = None,
-                                    json: int = 0,
-                                    db: AsyncIOMotorClient = Depends(get_database), ):
-    """
-    Mimic 2Captcha API endpoint parameters to create a new ReCaptcha job.
-    """
-    if key != settings.ROOT_API_KEY:
-        return PlainTextResponse("ERROR_WRONG_USER_KEY", status_code=401)
-    try:
-        recaptcha = ReCaptchaCreate(api_key=key, method=method, googlekey=googlekey, pageurl=pageurl, proxy=proxy,
-                                    proxytype=proxytype)
-        result = await create_recaptcha(db, recaptcha)
-        if json == 0:
-            return f"OK|{result.id}"
-        return {"status": 1, "request": f"{result.id}"}
-    except ValidationError as ve:
-        return PlainTextResponse("ERROR_BAD_PARAMETERS", status_code=422)
-    except Exception as e:
-        return PlainTextResponse(f"UNKNOWN_ERROR: {e}", status_code=422)
-
-
-@router.get("/2captcha/{job_id}", response_class=PlainTextResponse)
-async def get_recaptcha_job_2captcha(job_id: PyObjectId,
+@router.get("/2captcha", response_class=PlainTextResponse)
+async def get_recaptcha_job_2captcha(key: str,
+                                     job_id: PyObjectId = Query(..., alias="id"),
+                                     action: str = "get",
                                      db: AsyncIOMotorClient = Depends(get_database), ):
-    job = await get_recaptcha(db, ObjectId(job_id))
     """
     Mimic 2Captcha API endpoint parameters to retrieve a ReCaptcha job by job_id.
     """
+    if key != settings.ROOT_API_KEY:
+        return PlainTextResponse("ERROR_WRONG_USER_KEY", status_code=401)
 
+    job = await get_recaptcha(db, ObjectId(job_id))
     # The job_id does not exist in the database, return ERROR_WRONG_CAPTCHA_ID
     if not job:
         return PlainTextResponse("ERROR_WRONG_CAPTCHA_ID", status_code=404)
@@ -146,3 +105,48 @@ async def get_recaptcha_job_2captcha(job_id: PyObjectId,
 
     # Unhandled error
     return PlainTextResponse("ERROR_CAPTCHA_UNSOLVABLE", status_code=418)
+
+
+@router.post("/2captcha/submit", response_class=PlainTextResponse)
+async def submit_recaptcha_2captcha(key: str,
+                                    googlekey: str,
+                                    pageurl: str,
+                                    method: str = "userrecaptcha",
+                                    proxy: Optional[str] = None,
+                                    proxytype: Optional[str] = None,
+                                    json: int = 0,
+                                    db: AsyncIOMotorClient = Depends(get_database), ):
+    """
+    Mimic 2Captcha API endpoint parameters to create a new ReCaptcha job.
+    """
+    if key != settings.ROOT_API_KEY:
+        return PlainTextResponse("ERROR_WRONG_USER_KEY", status_code=401)
+    try:
+        recaptcha = ReCaptchaCreate(api_key=key, method=method, googlekey=googlekey, pageurl=pageurl, proxy=proxy,
+                                    proxytype=proxytype)
+        result = await create_recaptcha(db, recaptcha)
+        if json == 0:
+            return f"OK|{result.id}"
+        return {"status": 1, "request": f"{result.id}"}
+    except ValidationError as ve:
+        return PlainTextResponse("ERROR_BAD_PARAMETERS", status_code=422)
+    except Exception as e:
+        return PlainTextResponse(f"UNKNOWN_ERROR: {e}", status_code=422)
+
+
+@router.get("/{job_id}", response_model=Union[ReCaptchaResponse, ReCaptchaSolved],
+            response_model_exclude_unset=True, response_model_exclude_none=True)
+async def get_recaptcha_job(job_id: PyObjectId,
+                            db: AsyncIOMotorClient = Depends(get_database), ):
+    """
+    Retrieve ReCaptcha job by job_id.
+    """
+    print(job_id)
+    print(type(job_id))
+    job = await get_recaptcha(db, ObjectId(job_id))
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job with id '{job_id}' not found",
+        )
+    return create_aliased_response(job)
