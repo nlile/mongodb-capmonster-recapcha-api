@@ -1,9 +1,16 @@
 import asyncio
 import os
+from pprint import pprint
+import httpx
 from bson import ObjectId
 from dotenv import load_dotenv, find_dotenv
 from motor.motor_asyncio import AsyncIOMotorCollection
 
+import sys
+from pathlib import Path
+# Grab and append root path for imports
+fastpath = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(fastpath))
 from mdb import MongoDB
 from capmonster.fastapi.app.schema.recaptcha import ProxyTypeEnum, ReCaptchaCreate
 
@@ -38,7 +45,7 @@ class CaptchaSolveError(Exception):
         super().__init__(self.message)
 
 
-async def check_for_solution(mdb_id: ObjectId, collection: AsyncIOMotorCollection) -> str:
+async def check_for_solution_local(mdb_id: ObjectId, collection: AsyncIOMotorCollection) -> str:
     """
     Loops for max-time waiting for a solution (finished result) in the MongoDB
     Non-local scripts call this function instead of a captcha_solver.py function
@@ -54,6 +61,37 @@ async def check_for_solution(mdb_id: ObjectId, collection: AsyncIOMotorCollectio
         if "error" in result.keys():
             raise CaptchaSolveError(message=result["error"])
         await asyncio.sleep(RETRY_WAIT)
+    raise TimeoutError
+
+
+async def check_for_solution_fastapi(mdb_id: str, fastapi_endpoint_url: str) -> str:
+    """
+
+    """
+    # Captcha solving takes time, initial wait of 30 seconds
+    await asyncio.sleep(25)
+    # Loop through the max number of times that 3x timeouts could take
+    for _ in range(int(TIMEOUT / RETRY_WAIT)):
+        await asyncio.sleep(RETRY_WAIT)
+
+        fullurl = f"{fastapi_endpoint_url}?key={ROOT_API_KEY}&action=get&id={mdb_id}"
+        print(f"[2CaptchaUpload] Get Captcha with id {mdb_id}")
+        async with httpx.AsyncClient() as client:
+            request = await client.get(fullurl, timeout=60)
+            print(request.text)
+
+            # Ensure captcha is solved before returning key or errors
+            while request.text == "CAPCHA_NOT_READY":
+                await asyncio.sleep(RETRY_WAIT)
+                request = await client.get(fullurl, timeout=60)
+                print(request.text)
+
+            if request.text.split('|')[0] == "OK":
+                return request.text.split('|')[1]
+            else:
+                print("Handle response errors here")
+                raise CaptchaSolveError
+
     raise TimeoutError
 
 
@@ -92,7 +130,7 @@ async def get_captcha_answer(pageurl: str,
     print(f"Job added, giving CapMonster some time to work by sleeping for {INITIAL_WAIT}")
     await asyncio.sleep(INITIAL_WAIT)
     try:
-        return await check_for_solution(job_id, collection)
+        return await check_for_solution_local(job_id, collection)
     except TimeoutError:
         raise
     except Exception as e:
@@ -100,9 +138,9 @@ async def get_captcha_answer(pageurl: str,
         raise
 
 
-async def client_example():
+async def client_example_local():
     """
-    Client example / test
+    Client example / test for running /capmonster/local/ WITHOUT fastapi
     """
     db = MongoDB()
     collection = await db.get_collection()
@@ -113,9 +151,29 @@ async def client_example():
     captcha_job = await collection.insert_one(recapcha.dict(exclude_none=True))
     print(f"Hold on to {captcha_job.inserted_id} and query DB to check if updated")
     await asyncio.sleep(INITIAL_WAIT)
-    await check_for_solution(ObjectId(captcha_job.inserted_id), collection)
+    await check_for_solution_local(ObjectId(captcha_job.inserted_id), collection)
+
+
+async def client_example_fastapi(fastapi_endpoint_url: str):
+    """
+    Client example / test for running /capmonster/local/ WITH fastapi
+    """
+    fullurl = f"{fastapi_endpoint_url}/submit?key={ROOT_API_KEY}&method=userrecaptcha&googlekey={TEST_GOOGLEKEY}&pageurl={TEST_URL}&proxy={TEST_PROXY}&proxytype=HTTP"
+
+    print(fullurl)
+    async with httpx.AsyncClient() as client:
+        request = await client.post(fullurl, timeout=60)
+        if request.status_code:
+            pprint(request.status_code)
+            if request.text.split('|')[0] == "OK":
+                print("[2CaptchaUpload] Upload Ok\n", request.text.split('|')[1])
+                return await check_for_solution_fastapi(request.text.split('|')[1], fastapi_endpoint_url)
+            else:
+                print("Handle errors here")
+
 
 
 ## Quick Test
 if __name__ == "__main__":
-    asyncio.run(client_example())
+    asyncio.run(client_example_fastapi("https://api.middleware.link/api/v1/2captcha"))
+    # asyncio.run(client_example_local())
