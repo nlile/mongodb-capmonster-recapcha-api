@@ -14,8 +14,8 @@ This middleware should not be used for paid recognition services._
 ## Project Structure
 
 ### capmonster/local/*
-`Server.py` runs alongside a single license of [ZennoLab's CapMonster 2](https://bit.ly/CapMonster2). The `client.py`
-has examples of submitting jobs directly to the DB or API.
+`server.py` runs alongside a single license of [ZennoLab's CapMonster 2](https://bit.ly/CapMonster2). 
+`client.py` includes examples of submitting jobs directly to the DB or API.
 If you're integrating this into your own applications and trust every `client.py` with DB rw privileges, fastapi is not necessary. 
 However, integration into 3rd party apps will be difficult/impossible without an API endpoint.
 
@@ -40,8 +40,8 @@ In other words, clients make requests to a custom domain/FastAPI endpoints versu
 - Running instance of CapMonster with Recaptcha2 Sitekey Addon
 - Clone the full repo (Depends on schema from `capmonster/fastapi/app/schema`)
 - Install requirements `pip install -r requirements.txt`
-- `mv .env.example .env` and update settings
-- `python3 ./server.py`
+- Copy `.env.example` to `.env` and add your settings
+- Run `python3 ./server.py`
 
 #### Usage
 `server.py` must be running on the same PC as CapMonster. It listens for new jobs, submits them to CapMonster via `captcha_solver.py`, and updates the DB with results. `captcha_solver.py` uses the 2CaptchaAPI to communicate with CapMonster. 
@@ -60,6 +60,15 @@ Or, intercept applications making 2Captcha requests by editing the machine's hos
 
 Purge garbage (old ReCaptcha jobs) in the DB after any minute interval using the `remove_garbage` flag locally in 
 `server` or with the FastAPI endpoint `/api/v1/garbage`.
+
+## Production
+### /local/
+Using Windows Task Scheduler, add "Start a Program" Tasks to launch `C:\[...]\CapMonster` and `C:\[...]\local\server.py`, triggered by sys startup.
+
+![Windows Task Scheduler](https://i.imgur.com/zZctSWC.png)
+
+### /fastapi/
+`docker-compose.prod.yml` file includes `restart: unless-stopped`.
 
 ## References
 
