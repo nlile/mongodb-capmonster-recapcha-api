@@ -50,7 +50,7 @@ In other words, clients make requests to a custom domain/FastAPI endpoints versu
 
 **/fastapi**
 - Install docker & docker-compose on a server, such as [DigitalOcean's Basic Droplet](https://bit.ly/BasicDroplet). Docker with developer tools is also available as a DigitalOcean 1-Click Applications.
-- Copy the repo & follow instructions in [/fastapi/README.md](/fastapi/README.md)
+- Copy the repo & follow instructions in [/capmonster/fastapi/README.md](/fastapi/README.md)
 
 #### Usage
 Replace any 2Captcha API calls with FastAPI endpoints. 

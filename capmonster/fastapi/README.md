@@ -1,9 +1,21 @@
 # Set Up a FastAPI Server
 
-Set up a [Traefik network](https://github.com/lfache/awesome-traefik/tree/master/traefik) with compose. 
-Add the network name to  `docker-compose.prod.yml`
+## Dev
 
-`git clone {/fastapi/*}` or move files via deployment/sftp/etc.
+Update `.env`
+
+`docker-compose up -d`
+
+Swagger docs: http://localhost:5000/docs
+
+## Production
+
+_(On an Ubuntu/Debian [basic droplet](https://bit.ly/BasicDroplet) or similar server.)_
+
+Set up a [Traefik network](https://github.com/lfache/awesome-traefik/tree/master/traefik) with compose. 
+Add the network name to `docker-compose.prod.yml`
+
+`git clone {/fastapi/*}` or move files via deployment/sftp.
 
 Rename/move the directory. Such as
 
@@ -19,7 +31,7 @@ Change directories
 
 Update/overwrite `.env` settings
 
-`sudo mv .env.prod .env` or `sudo nano .env` etc...
+`sudo mv .env.prod .env`
 
 Update `docker-compose.prod.yml` settings
 
