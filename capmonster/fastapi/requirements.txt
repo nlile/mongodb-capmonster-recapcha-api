@@ -35,7 +35,7 @@ hiredis==2.0.0
 # fastapi-users==8.0.0
 fastapi-users[mongodb]==8.0.0
 pyjwt
-python-multipart==0.0.5
+python-multipart==0.0.7
 makefun >=1.11.2,<1.12
 
 # String formatting
